@@ -1,0 +1,8 @@
+node_modules/
+.cache/
+.whisper/
+.venv/
+projects/*/
+!projects/_shared/
+projects/*/.state/
+tests/
