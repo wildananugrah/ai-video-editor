@@ -25,10 +25,12 @@ export const FootageSegments: React.FC<{
 							trimBefore={seg.srcStartFrame}
 							muted={muted}
 							volume={(f) =>
-								interpolate(f, [0, GUARD_FRAMES, d - GUARD_FRAMES - 1, d - 1], [0, 1, 1, 0], {
-									extrapolateLeft: 'clamp',
-									extrapolateRight: 'clamp',
-								})
+								d < 4
+									? 1
+									: interpolate(f, [0, GUARD_FRAMES, d - GUARD_FRAMES - 1, d - 1], [0, 1, 1, 0], {
+											extrapolateLeft: 'clamp',
+											extrapolateRight: 'clamp',
+										})
 							}
 							style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition, ...style}}
 						/>

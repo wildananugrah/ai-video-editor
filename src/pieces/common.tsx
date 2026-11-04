@@ -79,6 +79,7 @@ export const Placed: React.FC<{
 					left: (x ?? 0.5) * box.width,
 					top: (y ?? 0.5) * box.height,
 					transform: 'translate(-50%, -50%)',
+					width: 'max-content',
 				}}
 			>
 				{children}

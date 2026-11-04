@@ -4,7 +4,7 @@ Edit talking-head videos by chatting, with no video editor needed. Record yourse
 
 - **Transcription on your machine** (whisper.cpp, tuned for Bahasa Indonesia). It writes an SRT with word timings, so graphics appear right when you say the words.
 - **Cutting:** removes silences automatically, plus bad takes, tangents and trims on request. Graphics follow their words when the cuts change.
-- **19 motion-graphic pieces:** keyword text, cards, split screen, zoom, images and B-roll, stickers, stamps, markers, captions, name bars, sound effects and more.
+- **23 motion-graphic pieces:** keyword text, cards, split screen, zoom, images and B-roll, stickers, stamps, markers, captions, name bars, count-up stats, diagrams, step trackers, sound effects and more.
 - **Two styles:** `collage` (paper, tape and stamps with a stop-motion feel) and `clean` (corporate cards and smooth motion), both in one shared palette.
 - **Any format:** 9:16, 16:9 and 4:5. Layouts rearrange for vertical video and keep clear of TikTok/Reels buttons.
 
@@ -85,11 +85,11 @@ You'll mostly let Claude run these, but they all work by hand. Times are `mm:ss.
 | Command | What it does |
 |---|---|
 | `npm run ingest -- <video> <project> [--append]` | Create a project: keep the original, make a working copy, detect pauses, transcribe. `--append` adds another take to the end. |
-| `npm run transcribe -- <project>` | Re-run transcription. |
+| `npm run transcribe -- <project> [--realign]` | Re-run transcription. `--realign` only redoes word timing. |
 | `npm run srt -- <project> --from 00:10 --to 00:20 [--words] [--source]` | Print what's said in a time range (edited time by default). |
 | `npm run cuts -- propose <project>` | Show what the silence pass would cut (`--max-gap 0.6 --pad 0.15 --noise -35`). |
 | `npm run cuts -- silence <project>` | Apply the silence pass. |
-| `npm run cuts -- remove <project> <from> <to>` | Cut a range of the edited video (snaps to word edges). |
+| `npm run cuts -- remove <project> <from> <to> [--source s1]` | Cut a range of the edited video (snaps to word edges), or of the original recording with `--source`. |
 | `npm run cuts -- trim <project> --start t --end t` | Trim the start and/or end. |
 | `npm run cuts -- list\|reset <project>` | Show the kept segments / go back to the full recording. |
 | `npm run cut-preview -- <project>` | Fast 720p preview of the cuts only, plus `transcript.edited.srt`. |

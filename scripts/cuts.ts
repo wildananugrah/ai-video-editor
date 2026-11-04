@@ -3,10 +3,11 @@
 //   propose <project> [--max-gap s] [--pad s] [--noise dB]   what the silence pass would remove (no changes)
 //   silence <project> [--max-gap s] [--pad s] [--noise dB]   apply the silence pass
 //     --noise re-detects pauses at that level (default -35; try -30 for noisy rooms)
-//   remove  <project> <from> <to>          cut a range of the EDITED video (snaps to word edges)
+//   remove  <project> <from> <to> [--source s1]   cut a range of the EDITED video (snaps to word edges),
+//                                          or with --source a range of that ORIGINAL recording
 //   trim    <project> [--start t] [--end t]     cut everything before/after (edited time)
 //   reset   <project>                      back to the whole recording(s)
-import {applySilence, removeEditedRange, toSegments, totalFrames, wordsInEditedTime} from '../src/lib/cuts.ts';
+import {applySilence, removeEditedRange, removeSourceRange, toSegments, totalFrames, wordsInEditedTime} from '../src/lib/cuts.ts';
 import {formatTime, parseTime} from '../src/lib/time.ts';
 import type {Cut} from '../src/lib/types.ts';
 import path from 'node:path';
@@ -87,6 +88,10 @@ switch (cmd) {
 		break;
 	case 'remove': {
 		if (!a || !b) fail('usage: npm run cuts -- remove <project> <from> <to>');
+		if (typeof flags.source === 'string') {
+			save(removeSourceRange(edit.cuts, flags.source, parseTime(a), parseTime(b)), `removed ${a}–${b} of ${flags.source}`);
+			break;
+		}
 		const from = snap(parseTime(a), 'start');
 		const to = snap(parseTime(b), 'end');
 		save(removeEditedRange(edit.cuts, fps, from, to), `removed ${formatTime(from)}–${formatTime(to)}`);

@@ -22,7 +22,9 @@ Design: `docs/superpowers/specs/2026-11-03-edit-video-by-prompt-design.md`.
 2. **Cut pass** (times in the ORIGINAL until the first cut; `cuts` commands use edited time):
    - `npm run -s cuts -- propose <p>` → shows what the silence pass would remove. `silence <p>` applies it (`--max-gap 0.6 --pad 0.15`, `--noise -30` for noisy rooms).
    - Bad takes / tangents: read the transcript, find restarts ("jadi, jadi, eh salah"), propose them to the user with times and text, then `cuts -- remove <p> <from> <to>` (edited time, snaps to word edges). `trim <p> --start t --end t`. `list <p>`. `reset <p>`.
+   - Cut by ORIGINAL time: `cuts -- remove <p> <from> <to> --source s1`. A cold open is a cut placed first in `cuts` with `"note": "cold open"`.
    - `npm run -s cut-preview -- <p>` → `out/cut-preview.mp4` (720p, fast) and `transcript.edited.srt`.
+   - **Verify cuts by ear:** Whisper's word timings are approximate and it sometimes invents repeats. Re-transcribe the preview's audio with `.whisper/build/bin/whisper-cli` and read the text around each cut. `transcribe <p> --realign` redoes word alignment without re-transcribing.
 3. **Graphics pass:** prompt times are EDITED-video time (= `transcript.edited.srt`). Add entries to `edit.json`, `check`, maybe `still`.
 4. If cuts change after graphics exist: `npm run -s recut -- <p>` moves graphics with their words (lists any whose footage was cut).
 5. **Render:** `npm run render -- <p> --preview` (half-res) / `npm run render -- <p>` (final, source size). `--from/--to` renders a section. Output in `projects/<p>/out/`.
@@ -59,6 +61,7 @@ When adding a piece, make it look right in both styles.
 ## Pieces
 
 Common placement props (most pieces): `position` (`center left right top bottom top-left top-right bottom-left bottom-right`), or `x`/`y` (0–1 centre point, overrides position), `size` (scale, 1 = default), `tilt` (deg).
+Pieces placed with `x`/`y` keep their natural width. In 16:9 talking-head shots, place text on the sides and keep it clear of the face; check with a still.
 In vertical frames (9:16, 4:5) `left`→`top`, `right`→`bottom` automatically; content stays inside the platform-safe area.
 Colours accept theme names (`paper ink yellow red card solution normal white`) or CSS colours.
 
@@ -81,6 +84,10 @@ Colours accept theme names (`paper ink yellow red card solution normal white`) o
 | `caption` | spoken words, a few at a time, current word highlighted (only when asked) | `wordsPerLine`, `style` box/plain |
 | `tape` | small Courier label on tape | `text` |
 | `lowerthird` | name bar (bottom-left) | `name`, `role` |
+| `stat` | big number counting up, with a label | `value`, `countFrom`, `decimals`, `prefix`, `suffix`, `label`, `color` |
+| `pictogram` | row of people, some turning red ("1 dari 6") | `total`, `highlight`, `highlightDelay`, `label` |
+| `flow` | diagram: start → middle → outcomes (use inside a full-screen `scene`) | `start`, `middle`, `outcomes` [], `active`, `revealEach`, `size` |
+| `steps` | numbered step tracker that stays on screen | `steps` [{`text`, `at` (seconds after entry start)}] |
 | `sfx` | sound effect | `sound`: whoosh pop stamp click riser ding, or a project file; `volume` |
 | `fade` | fade whole frame | `direction` in/out, `color` |
 

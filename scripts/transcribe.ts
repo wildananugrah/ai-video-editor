@@ -1,4 +1,5 @@
-// npm run transcribe -- <project> [source-id]
+// npm run transcribe -- <project> [source-id] [--realign]
+// --realign redoes word alignment from the saved Whisper output, without re-transcribing.
 // Local whisper.cpp transcription (Bahasa Indonesia) with word timestamps.
 // Writes transcript.json, transcript.srt (source time) and transcript.edited.srt.
 import fs from 'node:fs';
@@ -13,7 +14,7 @@ import {detectSilences, fail, parseArgs, readEdit, readSilences, readTranscript,
 
 const LOW_CONFIDENCE = 0.4;
 
-export const transcribeSource = async (name: string, id: string) => {
+export const transcribeSource = async (name: string, id: string, realign = false) => {
 	const edit = readEdit(name);
 	const source = edit.sources.find((s) => s.id === id) ?? fail(`No source "${id}"`);
 	if (!fs.existsSync(path.join(WHISPER_DIR, `ggml-${WHISPER_MODEL}.bin`))) fail('Whisper not installed: run `npm run setup` first');
@@ -22,21 +23,29 @@ export const transcribeSource = async (name: string, id: string) => {
 	fs.mkdirSync(path.dirname(wav), {recursive: true});
 	run('ffmpeg', ['-y', '-v', 'error', '-i', path.join(dir, source.file), '-ar', '16000', '-ac', '1', '-c:a', 'pcm_s16le', wav]);
 
-	console.log(`→ transcribing ${id} (${formatTime(source.durationInSeconds)})…`);
-	const out = await transcribe({
-		inputPath: wav,
-		whisperPath: WHISPER_DIR,
-		whisperCppVersion: WHISPER_VERSION,
-		model: WHISPER_MODEL,
-		tokenLevelTimestamps: true,
-		language: 'id',
-		splitOnWord: true,
-		printOutput: false,
-		onProgress: (p) => process.stdout.write(`\r  ${Math.round(p * 100)}%`),
-	});
-	process.stdout.write('\n');
+	const rawPath = path.join(dir, '.state', `${id}.whisper.json`);
+	let out: Parameters<typeof toCaptions>[0]['whisperCppOutput'];
+	if (realign) {
+		if (!fs.existsSync(rawPath)) fail(`No saved Whisper output for ${id}: run transcribe without --realign`);
+		out = JSON.parse(fs.readFileSync(rawPath, 'utf8'));
+	} else {
+		console.log(`→ transcribing ${id} (${formatTime(source.durationInSeconds)})…`);
+		out = await transcribe({
+			inputPath: wav,
+			whisperPath: WHISPER_DIR,
+			whisperCppVersion: WHISPER_VERSION,
+			model: WHISPER_MODEL,
+			tokenLevelTimestamps: true,
+			language: 'id',
+			splitOnWord: true,
+			printOutput: false,
+			onProgress: (p) => process.stdout.write(`\r  ${Math.round(p * 100)}%`),
+		});
+		process.stdout.write('\n');
+		fs.writeFileSync(rawPath, JSON.stringify(out));
+	}
 	const silences = readSilences(name);
-	silences[id] = detectSilences(wav);
+	if (!realign || !silences[id]) silences[id] = detectSilences(wav);
 	writeSilences(name, silences);
 	const raw: Word[] = toCaptions({whisperCppOutput: out})
 		.captions.map((c) => ({
@@ -64,9 +73,9 @@ export const transcribeSource = async (name: string, id: string) => {
 };
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-	const {pos} = parseArgs();
+	const {pos, flags} = parseArgs();
 	const [name, id] = pos;
-	if (!name) fail('usage: npm run transcribe -- <project> [source-id]');
+	if (!name) fail('usage: npm run transcribe -- <project> [source-id] [--realign]');
 	const ids = id ? [id] : readEdit(name).sources.map((s) => s.id);
-	for (const s of ids) await transcribeSource(name, s);
+	for (const s of ids) await transcribeSource(name, s, Boolean(flags.realign));
 }

@@ -3,7 +3,7 @@
 // Graphics whose whole range was cut out are removed and listed (saved in .state/).
 import fs from 'node:fs';
 import path from 'node:path';
-import {editedToSource, sourceToEdited, toSegments} from '../src/lib/cuts.ts';
+import {editedToSource, sourceToEditedAll, toSegments} from '../src/lib/cuts.ts';
 import {formatTime, parseTime} from '../src/lib/time.ts';
 import type {Entry} from '../src/lib/types.ts';
 import {projectDir} from './config.ts';
@@ -24,7 +24,10 @@ const oldSegs = toSegments(oldCuts, fps);
 const newSegs = toSegments(edit.cuts, fps);
 const map = (t: number) => {
 	const src = editedToSource(oldSegs, t, fps);
-	return src ? sourceToEdited(newSegs, src.source, src.seconds, fps) : null;
+	if (!src) return null;
+	// A cold open can reuse a line: stay near where the graphic already was.
+	const places = sourceToEditedAll(newSegs, src.source, src.seconds, fps);
+	return places.length ? places.reduce((a, b) => (Math.abs(b - t) < Math.abs(a - t) ? b : a)) : null;
 };
 // Walk inwards one frame at a time until we land on footage that survived.
 const mapInward = (from: number, to: number, dir: 1 | -1) => {

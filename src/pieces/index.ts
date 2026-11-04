@@ -20,6 +20,10 @@ import * as stamp from './stamp';
 import * as sticker from './sticker';
 import * as tape from './tape';
 import * as zoom from './zoom';
+import * as flow from './flow';
+import * as pictogram from './pictogram';
+import * as stat from './stat';
+import * as steps from './steps';
 import * as cleanCaption from './clean/caption';
 import * as cleanCard from './clean/card';
 import * as cleanKeyword from './clean/keyword';
@@ -52,6 +56,10 @@ export const pieces: Record<string, Piece> = {
 	tape,
 	fade,
 	lowerthird,
+	stat,
+	pictogram,
+	flow,
+	steps,
 };
 
 // Pieces that look different in the clean style. They share the collage schema,

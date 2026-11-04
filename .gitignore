@@ -6,3 +6,6 @@ projects/*/
 !projects/_shared/
 projects/*/.state/
 tests/
+videos/
+output/
+images/
